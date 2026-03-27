@@ -61,9 +61,9 @@ asmlinkage long hook_aarch64_execve(const struct pt_regs *regs)
 	void ***argv = (void ***)&regs->regs[1];
 	void ***envp = (void ***)&regs->regs[2];
 
-	ksu_handle_execve(filename, argv, envp);
+	ksu_handle_execve_sucompat(NULL, filename, argv, envp, NULL);
 
-	return __arm64_sys_execve(regs);
+	return aarch64_execve(regs);
 }
 
 extern long __arm64_sys_faccessat(const struct pt_regs *regs);
@@ -134,8 +134,8 @@ asmlinkage long hook_armeabi_execve(const struct pt_regs *regs)
 	void ***argv = (void ***)&regs->regs[1];
 	void ***envp = (void ***)&regs->regs[2];
 
-	ksu_handle_execve(filename, argv, envp);
-	return __arm64_compat_sys_execve(regs);
+	ksu_handle_execve_sucompat(NULL, filename, argv, envp, NULL);
+	return armeabi_execve(regs);
 }
 
 extern long __arm64_sys_faccessat(const struct pt_regs *regs);
@@ -197,7 +197,7 @@ asmlinkage long hook_aarch64_execve(const char __user * filename,
 				const char __user *const __user * argv,
 				const char __user *const __user * envp)
 {
-	ksu_handle_execve(&filename, (void ***)&argv, (void ***)&envp);
+	ksu_handle_execve_sucompat(NULL, &filename, (void ***)&argv, (void ***)&envp, NULL);
 	return sys_execve(filename, argv, envp);
 }
 
@@ -246,7 +246,7 @@ asmlinkage long hook_armeabi_execve(const char __user * filename,
 				const compat_uptr_t __user * argv,
 				const compat_uptr_t __user * envp)
 {
-	ksu_handle_execve(&filename, (void ***)&argv, (void ***)&envp);
+	ksu_handle_execve_sucompat(NULL, &filename, (void ***)&argv, (void ***)&envp, NULL);
 	return compat_sys_execve(filename, argv, envp);
 }
 
