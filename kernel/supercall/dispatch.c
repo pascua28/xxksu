@@ -480,6 +480,31 @@ static int do_get_hook_mode(void __user *arg)
 	return 0;
 }
 
+static int do_get_hook_type(void __user *arg)
+{
+	struct ksu_hook_type_cmd cmd = {0};
+	const char *type = "Manual";
+
+#ifdef CONFIG_KSU_KPROBES_KSUD
+	type = "Kprobes";
+#elif defined(CONFIG_KSU_TAMPER_SYSCALL_TABLE)
+	type = "Manipulated";
+#endif
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 13, 0)
+	strscpy(cmd.hook_type, type, sizeof(cmd.hook_type));
+#else
+	strlcpy(cmd.hook_type, type, sizeof(cmd.hook_type));
+#endif
+
+	if (copy_to_user(arg, &cmd, sizeof(cmd))) {
+		pr_err("get_hook_type: copy_to_user failed\n");
+		return -EFAULT;
+	}
+
+	return 0;
+}
+
 static int do_get_version_tag(void __user *arg)
 {
 	struct ksu_get_version_tag_cmd cmd = {0};
@@ -763,6 +788,7 @@ static const struct ksu_ioctl_cmd_map ksu_ioctl_handlers[] = {
 	{ .cmd = KSU_IOCTL_DISABLE_ESCAPE_TO_ROOT, .name = "DISABLE_ESCAPE_TO_ROOT", .handler = do_disable_escape_to_root, .perm_check = only_root },
 	{ .cmd = KSU_IOCTL_GET_HOOK_MODE, .name = "GET_HOOK_MODE", .handler = do_get_hook_mode, .perm_check = manager_or_root },
 	{ .cmd = KSU_IOCTL_GET_VERSION_TAG, .name = "GET_VERSION_TAG", .handler = do_get_version_tag, .perm_check = manager_or_root },
+	{ .cmd = KSU_IOCTL_HOOK_TYPE, .name = "HOOK_TYPE", .handler = do_get_hook_type, .perm_check = manager_or_root },
 	{ .cmd = 0, .name = NULL, .handler = NULL, .perm_check = NULL } // Sentinel
 };
 
